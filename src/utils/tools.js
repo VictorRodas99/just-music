@@ -3,7 +3,7 @@ import { srcRootPath, PATHS } from '../config.js'
 
 /**
  *
- * @param {ytSearch.Item[]} results
+ * @param {{ results: ytSearch.Item[], limit?: number }} results
  * @returns {{
  *  id: string,
  *  url: string,
@@ -14,18 +14,28 @@ import { srcRootPath, PATHS } from '../config.js'
  *  duration: string
  * }[]}
  */
-export const mapResults = (results) => {
-  return results.map(
-    (result) => ({
-      id: result.id,
-      url: result.url,
-      title: result.title,
-      author: result.author.name,
-      verified: result.author.verified,
-      views: result.views,
-      duration: result.duration
-    })
-  )
+export function mapResults ({ results, limit = 0 }) {
+  const mapCallback = (result) => ({
+    id: result.id,
+    url: result.url,
+    title: result.title,
+    author: result.author.name,
+    verified: result.author.verified,
+    views: result.views,
+    duration: result.duration
+  })
+
+  if (!limit) {
+    return results.map(mapCallback)
+  }
+
+  if (typeof limit !== 'number') {
+    throw new TypeError('Limit must be a number')
+  }
+
+  if (limit > results.length) limit = results.length
+
+  return results.slice(0, limit).map(mapCallback)
 }
 
 export const getAudioAbsPath = (audioName = '') => {
@@ -46,4 +56,8 @@ export const getRandomNumber = (to) => {
   }
 
   return Math.floor(Math.random() * to)
+}
+
+export const developMode = (isInDevelopMode) => {
+  if (isInDevelopMode) console.error = () => {} // Dirty way to get rid of third party errors
 }
