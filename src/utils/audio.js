@@ -3,13 +3,7 @@ import { getScriptPath } from './tools.js'
 
 const playAudioForWindows = (path) => {
   const scriptPath = getScriptPath('windows.ps1')
-  const pipeScriptToStdin = `powershell Get-Content ${scriptPath} | Powershell.exe -noprofile -`
-  const acceptAll = '| echo "E"'
-  const giveArgument = `| ${path}`
-  // const command = `powershell Get-Content ${scriptPath} | Powershell.exe -noprofile - | echo 'Z' | ${path}`
-  const hideStdout = '| Out-Null'
-
-  const command = `${pipeScriptToStdin} ${acceptAll} ${giveArgument} ${hideStdout}`
+  const command = `Powershell.exe PowerShell.exe -ExecutionPolicy Bypass -File ${scriptPath} | ${path}`
 
   exec(command, (error, stdout, stderr) => {
     if (error) {
