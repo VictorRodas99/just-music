@@ -6,5 +6,12 @@ export const srcRootPath = path.dirname(configPath)
 
 export const PATHS = {
   audio: 'outputs',
-  scripts: 'audio-scripts'
+  scripts: {
+    windows: 'scripts/windows',
+    linux: 'scripts/linux'
+  },
+
+  absolutes: {
+    audio: (fileName) => path.join(srcRootPath, 'outputs', fileName)
+  }
 }
