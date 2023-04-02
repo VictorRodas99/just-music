@@ -1,7 +1,8 @@
-import { isCancel, cancel, spinner } from '@clack/prompts'
+import { intro, isCancel, cancel, spinner } from '@clack/prompts'
 import { getRandomNumber } from '../../utils/tools.js'
 import { getAudioFormatsFromUrl, downloadAudioBy } from '../../core/download.tools.js'
 import { playAudio } from '../../core/audio.js'
+import { PATHS } from '../../config.js'
 
 export const cliErrorMessage = (message) => {
   cancel(message)
@@ -46,4 +47,9 @@ export const downloadAndPlay = async (song) => {
   writableStream.on('finish', () => playAudio({ path: filePath, song }))
 
   loader.stop(`Playing "${song.title}"`)
+}
+
+export const autoplay = () => {
+  intro('Autoplaying...')
+  playAudio({ path: PATHS.audio('sample.mp3') })
 }
