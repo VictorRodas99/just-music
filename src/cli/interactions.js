@@ -1,7 +1,8 @@
-import { intro, select, text, spinner, cancel } from '@clack/prompts'
+import { intro, select, text, spinner } from '@clack/prompts'
 import { mapResults } from '../utils/tools.js'
-import { handleCancel, getRandomSongFrom } from '../utils/cli.tools.js'
-import { getVideosBySearch, getAudioFormatsFromUrl, downloadAudioBy } from '../utils/download.tools.js'
+import { handleCancel, getRandomSongFrom, downloadAndPlay } from './utils/cli.general.tools.js'
+import { getVideosBySearch } from '../core/download.tools.js'
+import { getPlaylistIDFromUser } from './utils/playlist.js'
 import color from 'picocolors'
 import ytpl from 'ytpl'
 
@@ -67,23 +68,10 @@ export async function handleSearchByName () {
   loader.stop()
 
   const songSelected = await giveOptionsToUser(results)
-  const [firstAudioFormat] = await getAudioFormatsFromUrl(
-    songSelected.url
-  )
-
-  loader.start('Downloading...')
-
-  downloadAudioBy({
-    url: songSelected.url,
-    givenMimeType: firstAudioFormat.mimeType
-  })
-
-  loader.stop(`Playing "${songSelected.title}"`)
+  downloadAndPlay(songSelected)
 }
 
 export async function handleSearchByLink () {
-  const loader = spinner()
-
   const onlyVideoOrPlaylist = await select({
     message: 'Only a single song or a playlist?',
     options: [
@@ -95,21 +83,7 @@ export async function handleSearchByLink () {
   handleCancel(onlyVideoOrPlaylist)
 
   if (onlyVideoOrPlaylist === 'playlist') {
-    // Handle playlist
-    const playlistUrl = await text({
-      message: 'Give the playlist link',
-      placeholder: 'here...'
-    })
-
-    handleCancel(playlistUrl)
-
-    const playlistID = await ytpl.getPlaylistID(playlistUrl)
-    const isValid = ytpl.validateID(playlistID)
-
-    if (!isValid) {
-      cancel('The given url is not valid!')
-      process.exit(1)
-    }
+    const playlistID = await getPlaylistIDFromUser()
 
     const playOption = await select({
       message: 'Select the mode you want',
@@ -124,21 +98,11 @@ export async function handleSearchByLink () {
     const playlist = await ytpl(playlistID)
 
     if (playOption === 'random') {
-      const songSelected = getRandomSongFrom(playlist.items)
-
-      // TODO: wrap this in a function bc it repeats above
-      const [firstAudioFormat] = await getAudioFormatsFromUrl(
-        songSelected.url
-      )
-
-      loader.start('Downloading...')
-
-      downloadAudioBy({
-        url: songSelected.url,
-        givenMimeType: firstAudioFormat.mimeType
-      })
-
-      loader.stop(`Playing "${songSelected.title}"`)
+      const song = getRandomSongFrom(playlist.items)
+      console.log(song)
+      downloadAndPlay(song)
+    } else if (playOption === 'order') {
+      // TODO: wait until the last music being played ends
     }
 
     // const search = await ytpl(playlistID, { pages: 1 })
