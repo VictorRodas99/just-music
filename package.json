@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node src/tests/cli.js",
-    "example": "node src/tests/example-cli.js",
+    "dev": "node src/index.js --dev",
+    "autoplay": "node src/index.js --dev --autoplay",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,7 +16,6 @@
   "dependencies": {
     "@clack/prompts": "^0.6.3",
     "picocolors": "^1.0.0",
-    "sound-play": "^1.1.0",
     "ytdl-core": "^4.11.2",
     "ytpl": "^2.3.0",
     "ytsr": "^3.8.0"
@@ -25,6 +24,8 @@
     "standard": "^17.0.0"
   },
   "eslintConfig": {
-    "extends": ["./node_modules/standard/eslintrc.json"]
+    "extends": [
+      "./node_modules/standard/eslintrc.json"
+    ]
   }
 }
