@@ -1,6 +1,11 @@
 import path from 'path'
 import { srcRootPath, PATHS } from '../config.js'
 
+export const otherSystemMessage = () => {
+  console.log(`${process.platform} not supported`)
+  process.exit(1)
+}
+
 /**
  *
  * @param {{ results: ytSearch.Item[], limit?: number }} results
@@ -46,8 +51,14 @@ export const getAudioAbsPath = (audioName = '') => {
   return path.join(srcRootPath, PATHS.audio, audioName)
 }
 
-export const getScriptPath = (scriptName) => {
-  return path.join(srcRootPath, PATHS.scripts, scriptName)
+export const getScriptPath = (scriptName, system) => {
+  const scriptRelativePath = PATHS.scripts[system] ?? ''
+
+  if (!scriptRelativePath) {
+    throw new Error(`${system} scripts not found!`)
+  }
+
+  return path.join(srcRootPath, PATHS.scripts[system], scriptName)
 }
 
 export const getRandomNumber = (to) => {
@@ -59,5 +70,31 @@ export const getRandomNumber = (to) => {
 }
 
 export const developMode = (isInDevelopMode) => {
-  if (isInDevelopMode) console.error = () => {} // Dirty way to get rid of third party errors
+  if (!isInDevelopMode) {
+    console.error = () => {} // Dirty way to get rid of third party errors
+    console.warn = () => {}
+  }
+}
+
+export const parseNumber = (number) => {
+  const parsedNumber = Number(number.replace(/\D/g, ''))
+  return isNaN(parsedNumber) ? 0 : parsedNumber
+}
+
+export const songDurationToMiliseconds = (duration) => {
+  const errorMessage = 'Given argument is not in a valid format type!'
+
+  if (typeof duration !== 'string') {
+    throw new TypeError(errorMessage)
+  }
+
+  if (duration.includes(':')) {
+    const [minutes, seconds] = duration.split(':').map(parseNumber)
+    const totalSeconds = (minutes * 60) + seconds
+    const totalMiliseconds = totalSeconds * 1_000
+
+    return totalMiliseconds
+  }
+
+  throw new Error(errorMessage)
 }
