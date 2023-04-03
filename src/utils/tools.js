@@ -1,6 +1,3 @@
-import path from 'path'
-import { srcRootPath, PATHS } from '../config.js'
-
 export const otherSystemMessage = () => {
   console.log(`${process.platform} not supported`)
   process.exit(1)
@@ -41,24 +38,6 @@ export function mapResults ({ results, limit = 0 }) {
   if (limit > results.length) limit = results.length
 
   return results.slice(0, limit).map(mapCallback)
-}
-
-export const getAudioAbsPath = (audioName = '') => {
-  if (!audioName) {
-    return path.join(srcRootPath, PATHS.audio)
-  }
-
-  return path.join(srcRootPath, PATHS.audio, audioName)
-}
-
-export const getScriptPath = (scriptName, system) => {
-  const scriptRelativePath = PATHS.scripts[system] ?? ''
-
-  if (!scriptRelativePath) {
-    throw new Error(`${system} scripts not found!`)
-  }
-
-  return path.join(srcRootPath, PATHS.scripts[system], scriptName)
 }
 
 export const getRandomNumber = (to) => {

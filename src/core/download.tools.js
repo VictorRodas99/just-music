@@ -1,8 +1,7 @@
 import ytSearch from 'ytsr'
 import ytdl from 'ytdl-core'
 import { createWriteStream } from 'node:fs'
-import { getAudioAbsPath } from '../utils/tools.js'
-// import { playAudio } from './audio.js'
+import { PATHS } from '../config.js'
 
 export const getAudioFormatsFromUrl = async (url) => {
   const resultsInfo = await ytdl.getInfo(url)
@@ -12,7 +11,7 @@ export const getAudioFormatsFromUrl = async (url) => {
 }
 
 export const createStream = () => {
-  const samplePath = getAudioAbsPath('sample.mp3')
+  const samplePath = PATHS.audio('sample.mp3')
   const writableStream = createWriteStream(samplePath)
 
   return {
@@ -38,7 +37,6 @@ export function downloadAudioBy ({ url, givenMimeType }) {
   ytdl(url, { filter: (format) => format.mimeType === givenMimeType })
     .pipe(writableStream)
 
-  // writableStream.on('finish', () => playAudio(filePath))
   return {
     writableStream,
     filePath
