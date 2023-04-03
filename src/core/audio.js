@@ -1,36 +1,12 @@
-// import { exec } from 'node:child_process'
 import { spawn } from 'node:child_process'
-import { getScriptPath, otherSystemMessage } from '../utils/tools.js'
-import { cliErrorMessage, handleCancel } from '../cli/utils/cli.general.tools.js'
-
-// import { checkMediaPlayerInit } from './playerProccess.js'
-
-/* cli interactions  */
-import { text } from '@clack/prompts'
-
-const waitForUserOption = async () => {
-  const option = await text({
-    message: 'Player controls...',
-    placeholder: 'pause | resume | next | close'
-  })
-
-  handleCancel(option)
-
-  return option
-}
-/* ---- */
+import { otherSystemMessage } from '../utils/tools.js'
+import { cliErrorMessage } from '../cli/utils/cli.general.tools.js'
+import { PATHS } from '../config.js'
+import { getMediaPlayerAction } from '../cli/interactions.js'
 
 const playAudioForWindows = async (path) => {
-  const scriptPath = getScriptPath('music-player.ps1', 'windows')
-  // const command = `PowerShell.exe -ExecutionPolicy Bypass -File ${scriptPath} | ${path}`
+  const scriptPath = PATHS.scripts('music-player.ps1')
   const args = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, path]
-
-  // exec(command, (error, stdout, stderr) => {
-  //   if (error) {
-  //     console.error(`Something went wrong:\n${error}`)
-  //     process.exit(1)
-  //   }
-  // })
 
   const mediaPlayerProcess = spawn('Powershell.exe', args)
 
@@ -45,13 +21,11 @@ const playAudioForWindows = async (path) => {
   let userOption
 
   do {
-    userOption = await waitForUserOption()
+    userOption = await getMediaPlayerAction()
     mediaPlayerProcess.stdin.write(`${userOption}\n`)
   } while (userOption !== 'close')
 
   process.exit(0)
-
-  // checkMediaPlayerInit()
 }
 
 const playAudioForLinux = (path) => {

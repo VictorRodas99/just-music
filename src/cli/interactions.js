@@ -6,6 +6,17 @@ import { getPlaylistIDFromUser } from './utils/playlist.js'
 import color from 'picocolors'
 import ytpl from 'ytpl'
 
+export const getMediaPlayerAction = async () => {
+  const option = await text({
+    message: 'Player controls...',
+    placeholder: 'pause | resume | next | close'
+  })
+
+  handleCancel(option)
+
+  return option
+}
+
 export async function giveOptionsToUser (results) {
   const errorMessage = "Your requested song wasn't found..."
 
