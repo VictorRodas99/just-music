@@ -1,5 +1,5 @@
 import { text, cancel } from '@clack/prompts'
-import { handleCancel } from './cli.general.tools.js'
+import { handleCancel, getRandomSongFrom, downloadAndPlay } from './cli.general.tools.js'
 import ytpl from 'ytpl'
 
 export const getPlaylistIDFromUser = async () => {
@@ -29,4 +29,12 @@ export const getPlaylistIDFromUser = async () => {
   }
 
   return playlistID
+}
+
+/**
+ * @param {ytpl.Item[]} playlist
+ */
+export const playRandomSongFrom = (playlist) => {
+  const song = getRandomSongFrom(playlist.items)
+  downloadAndPlay(song)
 }
