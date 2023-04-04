@@ -1,4 +1,4 @@
-import { playRandomSongFrom } from '../cli/utils/playlist'
+import { playRandomSongFrom } from '../cli/utils/playlist.js'
 
 export const nextSongHandler = () => {
   if (global.playlistPlayOption === 'random') {
