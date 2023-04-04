@@ -43,9 +43,13 @@ const playAudioForWindows = async (song) => {
   do {
     userOption = await getMediaPlayerAction()
     mediaPlayerProcess.stdin.write(`${userOption}\n`)
+
+    if (userOption === 'next') break
   } while (userOption !== 'close')
 
-  process.exit(0)
+  if (userOption === 'close') {
+    process.exit(0)
+  }
 }
 
 const playAudioForLinux = (song) => {
