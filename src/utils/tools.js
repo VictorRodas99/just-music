@@ -60,6 +60,15 @@ export const parseNumber = (number) => {
   return isNaN(parsedNumber) ? 0 : parsedNumber
 }
 
+/**
+ * Parse given string to get only letters
+ * @param {string} data
+ * @returns {string} parsedData
+ */
+export const parseOutput = (data) => {
+  return data.replace(/[^a-zA-Z]/g, '')
+}
+
 export const songDurationToMiliseconds = (duration) => {
   const errorMessage = 'Given argument is not in a valid format type!'
 
