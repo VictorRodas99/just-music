@@ -22,8 +22,9 @@ export const handleCancel = (propmtResult) => {
 }
 
 /**
+ * @typedef {import('ytpl').Item} Item
  * @param {ytpl.Item[]} playlistItems
- * @returns {ytpl.Item}
+ * @returns {Item}
  */
 export const getRandomSongFrom = (playlistItems) => {
   const total = playlistItems.length
