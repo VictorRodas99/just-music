@@ -3,6 +3,8 @@ import ytdl from 'ytdl-core'
 import { createWriteStream } from 'node:fs'
 import { PATHS } from '../config.js'
 
+let currentStream = null
+
 export const getAudioFormatsFromUrl = async (url) => {
   const resultsInfo = await ytdl.getInfo(url)
   const audioFormats = ytdl.filterFormats(resultsInfo.formats, 'audioonly')
@@ -12,7 +14,13 @@ export const getAudioFormatsFromUrl = async (url) => {
 
 export const createStream = () => {
   const samplePath = PATHS.audio('sample.mp3')
+
+  if (currentStream) {
+    currentStream.end()
+  }
+
   const writableStream = createWriteStream(samplePath)
+  currentStream = writableStream
 
   return {
     writableStream,
