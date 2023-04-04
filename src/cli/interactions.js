@@ -1,15 +1,20 @@
 import { intro, select, text, spinner } from '@clack/prompts'
 import { mapResults } from '../utils/tools.js'
-import { handleCancel, getRandomSongFrom, downloadAndPlay } from './utils/cli.general.tools.js'
+import { handleCancel, downloadAndPlay } from './utils/cli.general.tools.js'
 import { getVideosBySearch } from '../core/download.tools.js'
-import { getPlaylistIDFromUser } from './utils/playlist.js'
+import { getPlaylistIDFromUser, playRandomSongFrom } from './utils/playlist.js'
 import color from 'picocolors'
 import ytpl from 'ytpl'
+import { mediaPlayerEventHandler } from '../core/audio.js'
 
 export const getMediaPlayerAction = async () => {
+  const controls = global.sessionMode === 'playlist'
+    ? 'pause | resume | next | close'
+    : 'pause | resume | close'
+
   const option = await text({
     message: 'Player controls...',
-    placeholder: 'pause | resume | next | close'
+    placeholder: controls
   })
 
   handleCancel(option)
@@ -32,11 +37,11 @@ export async function giveOptionsToUser (results) {
 
   const songSelected = await select({
     message: 'Results...',
-    options: mappedResults.map((result) => {
+    options: mappedResults.map(({ url, id, title, duration, verified }) => {
       return {
-        value: { url: result.url, id: result.id, title: result.title },
-        label: result.title,
-        hint: result.duration
+        value: { url, id, title, duration },
+        label: `${title} ${verified ? '✔' : ''}`,
+        hint: duration
       }
     })
   })
@@ -63,6 +68,8 @@ export async function setupMainOption () {
 }
 
 export async function handleSearchByName () {
+  global.sessionMode = 'single'
+
   const loader = spinner()
 
   const query = await text({
@@ -94,6 +101,7 @@ export async function handleSearchByLink () {
   handleCancel(onlyVideoOrPlaylist)
 
   if (onlyVideoOrPlaylist === 'playlist') {
+    global.sessionMode = 'playlist'
     const playlistID = await getPlaylistIDFromUser()
 
     const playOption = await select({
@@ -106,16 +114,17 @@ export async function handleSearchByLink () {
     })
 
     handleCancel(playOption)
-    const playlist = await ytpl(playlistID)
+    global.playlist = await ytpl(playlistID)
 
     if (playOption === 'random') {
-      const song = getRandomSongFrom(playlist.items)
-      console.log(song)
-      downloadAndPlay(song)
+      global.playlistPlayOption = 'random'
+      playRandomSongFrom(global.playlist)
+      mediaPlayerEventHandler.on('next', () => {
+        mediaPlayerEventHandler.emit('restart')
+        playRandomSongFrom(global.playlist)
+      })
     } else if (playOption === 'order') {
       // TODO: wait until the last music being played ends
     }
-
-    // const search = await ytpl(playlistID, { pages: 1 })
   }
 }
