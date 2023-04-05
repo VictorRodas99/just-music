@@ -4,19 +4,21 @@ export const otherSystemMessage = () => {
 }
 
 /**
- *
- * @param {{ results: ytSearch.Item[], limit?: number }} results
- * @returns {{
- *  id: string,
- *  url: string,
- *  title: string,
- *  author: string,
- *  verified: boolean,
- *  views: number,
+ * @typedef {import('ytsr').Item} Item
+ * @typedef {{
+ *  id: string, url: string,
+ *  title: string, author: string,
+ *  verified: boolean, views: number,
  *  duration: string
- * }[]}
+ * }} Result
+ * @param {{ results: Item[], limit?: number }} mapArgs
+ * @returns {Result[]}
  */
 export function mapResults ({ results, limit = 0 }) {
+  /**
+   * @param {Item} result
+   * @returns {Result}
+   */
   const mapCallback = (result) => ({
     id: result.id,
     url: result.url,
@@ -41,22 +43,29 @@ export function mapResults ({ results, limit = 0 }) {
 }
 
 export const getRandomNumber = (to) => {
-  if (isNaN(to)) {
+  if (isNaN(Number(to))) {
     throw new TypeError('Argument must be a number')
   }
 
   return Math.floor(Math.random() * to)
 }
 
+/**
+ * @param {boolean} isInDevelopMode
+ */
 export const developMode = (isInDevelopMode) => {
+  if (typeof isInDevelopMode !== 'boolean') {
+    throw new TypeError('Develop mode must be boolean')
+  }
+
   if (!isInDevelopMode) {
     console.error = () => {} // Dirty way to get rid of third party errors
     console.warn = () => {}
   }
 }
 
-export const parseNumber = (number) => {
-  const parsedNumber = Number(number.replace(/\D/g, ''))
+export const parseNumber = (rawData) => {
+  const parsedNumber = Number(rawData.replace(/\D/g, ''))
   return isNaN(parsedNumber) ? 0 : parsedNumber
 }
 
@@ -69,6 +78,11 @@ export const parseOutput = (data) => {
   return data.replace(/[^a-zA-Z]/g, '')
 }
 
+/**
+ * The initial duration format must be in ```mm:ss```
+ * @param {string} duration
+ * @returns {number} ```durationInMilliseconds```
+ */
 export const songDurationToMiliseconds = (duration) => {
   const errorMessage = 'Given argument is not in a valid format type!'
 
