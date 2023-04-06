@@ -1,7 +1,7 @@
-import ytSearch from 'ytsr'
-import ytdl from 'ytdl-core'
 import { createWriteStream } from 'node:fs'
 import { PATHS } from '../config.js'
+import ytdl from 'ytdl-core'
+import ytSearch from 'ytsr'
 
 let currentStream = null
 
@@ -39,6 +39,12 @@ export async function getVideosBySearch (query) {
   return onlyVideos
 }
 
+/**
+ * @typedef {import('node:fs').WriteStream} WriteStream
+ *
+ * @param {{ url: string, givenMimeType: string | undefined }} info
+ * @returns { {writableStream: WriteStream, filePath: string} }
+ */
 export function downloadAudioBy ({ url, givenMimeType }) {
   const { writableStream, filePath } = createStream()
 
