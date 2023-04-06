@@ -1,12 +1,19 @@
-import { intro, select, text, spinner } from '@clack/prompts'
-import { mapResults } from '../utils/tools.js'
 import { handleCancel, downloadAndPlay } from './utils/cli.general.tools.js'
 import { getVideosBySearch } from '../core/download.tools.js'
-import { getPlaylistIDFromUser, playRandomSongFrom } from './utils/playlist.js'
+import { intro, select, text, spinner } from '@clack/prompts'
+import { handleSingleModeByLink } from './single.js'
+import { handlePlaylistMode } from './playlist.js'
+import { mapResults } from '../utils/tools.js'
+import { SESSIONS } from './config.js'
 import color from 'picocolors'
-import ytpl from 'ytpl'
-import { mediaPlayerEventHandler } from '../core/audio.js'
 
+/**
+ * @typedef {('pause' | 'resume' | 'next' | 'close')} UserOptionPlaylist
+ * @typedef {('pause' | 'resume' | 'close')} UserOptionSingle
+ * @typedef {UserOptionSingle | UserOptionPlaylist} UserOption
+ *
+ * @returns {Promise<UserOption>}
+ */
 export const getMediaPlayerAction = async () => {
   const controls = global.sessionMode === 'playlist'
     ? 'pause | resume | next | close'
@@ -22,6 +29,12 @@ export const getMediaPlayerAction = async () => {
   return option
 }
 
+/**
+ * @typedef {import('ytsr').Item} Item
+ * @typedef { { url: string, id: string, title: string, duration: string } } SongInfo
+ * @param {Item[]} results
+ * @returns {Promise<SongInfo>}
+ */
 export async function giveOptionsToUser (results) {
   const errorMessage = "Your requested song wasn't found..."
 
@@ -51,6 +64,9 @@ export async function giveOptionsToUser (results) {
   return songSelected
 }
 
+/**
+ * @returns {Promise<('name' | 'link')>}
+ */
 export async function setupMainOption () {
   intro(color.inverse(' just music... '))
 
@@ -68,12 +84,12 @@ export async function setupMainOption () {
 }
 
 export async function handleSearchByName () {
-  global.sessionMode = 'single'
+  global.sessionMode = SESSIONS.singleMode
 
   const loader = spinner()
 
   const query = await text({
-    message: "What's the name of your song?",
+    message: 'What\'s the name of your song?',
     placeholder: 'Around the world - Daft Punk'
   })
 
@@ -90,7 +106,7 @@ export async function handleSearchByName () {
 }
 
 export async function handleSearchByLink () {
-  const onlyVideoOrPlaylist = await select({
+  const singleOrPlaylist = await select({
     message: 'Only a single song or a playlist?',
     options: [
       { value: 'playlist', label: 'Show all the songs in a playlist' },
@@ -98,33 +114,11 @@ export async function handleSearchByLink () {
     ]
   })
 
-  handleCancel(onlyVideoOrPlaylist)
+  handleCancel(singleOrPlaylist)
 
-  if (onlyVideoOrPlaylist === 'playlist') {
-    global.sessionMode = 'playlist'
-    const playlistID = await getPlaylistIDFromUser()
+  const finalAction = singleOrPlaylist === 'playlist'
+    ? handlePlaylistMode
+    : handleSingleModeByLink
 
-    const playOption = await select({
-      message: 'Select the mode you want',
-      options: [
-        { value: 'random', label: 'Play random songs from the playlist' },
-        { value: 'order', label: 'Play songs in order' },
-        { value: 'single', label: 'Select the song you want' }
-      ]
-    })
-
-    handleCancel(playOption)
-    global.playlist = await ytpl(playlistID)
-
-    if (playOption === 'random') {
-      global.playlistPlayOption = 'random'
-      playRandomSongFrom(global.playlist)
-      mediaPlayerEventHandler.on('next', () => {
-        mediaPlayerEventHandler.emit('restart')
-        playRandomSongFrom(global.playlist)
-      })
-    } else if (playOption === 'order') {
-      // TODO: wait until the last music being played ends
-    }
-  }
+  finalAction()
 }
