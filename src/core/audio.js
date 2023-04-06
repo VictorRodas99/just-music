@@ -1,75 +1,54 @@
-import { spawn } from 'node:child_process'
-import { otherSystemMessage, songDurationToMiliseconds, parseOutput } from '../utils/tools.js'
+import { handleProcessError, handleProcessOutput, handleUserInput } from './utils/mediaPlayer.tools.js'
+import { otherSystemMessage, songDurationToMiliseconds } from '../utils/tools.js'
 import { cliErrorMessage } from '../cli/utils/cli.general.tools.js'
-import { PATHS } from '../config.js'
-import { getMediaPlayerAction } from '../cli/interactions.js'
+import { restartPlayer } from '../utils/player.tools.js'
 
+import { spawn } from 'node:child_process'
 import { EventEmitter } from 'node:events'
+
 import Timer from '../utils/timer.js'
-import { restartPlayer, nextSongHandler } from '../utils/player.tools.js'
+import { PATHS } from '../config.js'
 
 export const mediaPlayerEventHandler = new EventEmitter()
 
-const playAudioForWindows = async (song) => {
+const playAudioForWindows = async (audioPath) => {
+  if (!audioPath || typeof audioPath !== 'string') {
+    throw new Error(`Invalid audio path... (${audioPath})`)
+  }
+
   const scriptPath = PATHS.scripts('music-player.ps1')
-  const args = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, song.path]
+  const args = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, audioPath]
 
   const mediaPlayerProcess = spawn('Powershell.exe', args)
 
   mediaPlayerEventHandler.on('restart', () => restartPlayer(mediaPlayerProcess))
 
-  mediaPlayerProcess.stdout.on('data', (data) => {
-    const mode = parseOutput(data.toString())
-    const isInPlaylistMode = global.sessionMode === 'playlist'
-
-    if (isInPlaylistMode) {
-      if (mode === 'pause') {
-        global.timer.pause()
-      } else if (mode === 'resume') {
-        global.timer.resume()
-      } else if (mode === 'nextsong') {
-        restartPlayer(mediaPlayerProcess)
-        nextSongHandler()
-      }
-    }
-  })
-
-  mediaPlayerProcess.stderr.on('data', (chunk) => {
-    console.error(chunk.toString())
-  })
-
-  let userOption
-
-  do {
-    userOption = await getMediaPlayerAction()
-    mediaPlayerProcess.stdin.write(`${userOption}\n`)
-
-    if (userOption === 'next') break
-  } while (userOption !== 'close')
-
-  if (userOption === 'close') {
-    process.exit(0)
-  }
+  handleProcessOutput(mediaPlayerProcess)
+  handleProcessError(mediaPlayerProcess)
+  handleUserInput(mediaPlayerProcess)
 }
 
-const playAudioForLinux = (song) => {
+const playAudioForLinux = (audioPath) => {
   cliErrorMessage('Linux not supported yet')
 }
 
-const playAudioForMacOs = (song) => {
+const playAudioForMacOs = (audioPath) => {
   cliErrorMessage('Mac Os not supported yet!')
 }
 
+/**
+ * @typedef {import('../cli/interactions.js').SongInfo} SongInfo
+ * @param { { path: string, song: SongInfo | undefined } } info
+ */
 export function playAudio ({ path, song }) {
-  const songDuration = songDurationToMiliseconds(song.duration)
+  if (song) { // If it isn't in autoplay mode
+    const songDuration = songDurationToMiliseconds(song.duration)
 
-  if (global.sessionMode === 'playlist') {
-    // TODO: restart the timer if next event is triggered
-
-    // Call 'next' event when the song ends
-    global.timer = new Timer(() => {
-      mediaPlayerEventHandler.emit('next')
-    }, songDuration)
+    if (global.sessionMode === 'playlist') {
+      global.timer = new Timer(() => {
+        mediaPlayerEventHandler.emit('next')
+      }, songDuration) // Call 'next' event when the song ends
+    }
   }
 
   const actionsForSystem = {
@@ -79,5 +58,5 @@ export function playAudio ({ path, song }) {
   }
 
   const play = actionsForSystem[process.platform] ?? otherSystemMessage
-  play({ path, duration: songDuration })
+  play(path)
 }
