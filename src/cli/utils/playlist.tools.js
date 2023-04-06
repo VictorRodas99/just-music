@@ -1,8 +1,8 @@
-import { text, cancel } from '@clack/prompts'
 import { handleCancel, getRandomSongFrom, downloadAndPlay } from './cli.general.tools.js'
-import { restartTimer } from '../../utils/player.tools.js'
-import ytpl from 'ytpl'
 import { songDurationToMiliseconds } from '../../utils/tools.js'
+import { restartTimer } from '../../utils/player.tools.js'
+import { text, cancel } from '@clack/prompts'
+import ytpl from 'ytpl'
 
 export const getPlaylistIDFromUser = async () => {
   const playlistUrl = await text({
