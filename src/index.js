@@ -1,4 +1,4 @@
-import { autoplay, clearConsole } from './cli/utils/cli.general.tools.js'
+import { autoplay } from './cli/utils/cli.general.tools.js'
 import {
   setupMainOption,
   handleSearchByName,
@@ -10,7 +10,7 @@ const showError = console.error
 
 async function main () {
   developMode(process.argv[2] === '--dev')
-  clearConsole()
+  console.clear()
 
   if (process.argv[3] === '--autoplay') {
     return autoplay()
@@ -18,11 +18,11 @@ async function main () {
 
   const mainOption = await setupMainOption()
 
-  if (mainOption === 'name') {
-    handleSearchByName()
-  } else {
-    handleSearchByLink()
-  }
+  const mainAction = mainOption === 'name'
+    ? handleSearchByName
+    : handleSearchByLink
+
+  mainAction()
 }
 
 main().catch(showError)
