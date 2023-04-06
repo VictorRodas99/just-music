@@ -9,11 +9,6 @@ export const cliErrorMessage = (message) => {
   process.exit(1)
 }
 
-export const clearConsole = () => {
-  process.stdout.write('\u001b[2J\u001b[0;0H')
-  console.log()
-}
-
 export const handleCancel = (propmtResult) => {
   if (isCancel(propmtResult)) {
     cancel('Operation cancelled')
@@ -31,6 +26,10 @@ export const getRandomSongFrom = (playlistItems) => {
   return playlistItems[getRandomNumber(total) - 1]
 }
 
+/**
+ * @typedef {import('../interactions.js').SongInfo} SongInfo
+ * @param {SongInfo} song
+ */
 export const downloadAndPlay = async (song) => {
   const loader = spinner()
 
@@ -47,7 +46,7 @@ export const downloadAndPlay = async (song) => {
 
   writableStream.on('finish', () => playAudio({ path: filePath, song }))
 
-  loader.stop(`Playing "${song.title}"`)
+  loader.stop(`Playing "${song.title}"`) // TODO: change colors for this message
 }
 
 export const autoplay = () => {
