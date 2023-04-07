@@ -1,4 +1,4 @@
-import { handleCancel, downloadAndPlay } from './utils/cli.general.tools.js'
+import { handleCancel, downloadAndPlay, mediaPlayerOptionsValidation, parseOption } from './utils/cli.general.tools.js'
 import { getVideosBySearch } from '../core/download.tools.js'
 import { intro, select, text, spinner } from '@clack/prompts'
 import { handleSingleModeByLink } from './single.js'
@@ -14,19 +14,22 @@ import color from 'picocolors'
  *
  * @returns {Promise<UserOption>}
  */
-export const getMediaPlayerAction = async () => {
+export async function getMediaPlayerAction () {
+  const controlOptions = ['pause', 'resume', 'next', 'close']
+
   const controls = global.sessionMode === 'playlist'
-    ? 'pause | resume | next | close'
-    : 'pause | resume | close'
+    ? controlOptions.join(' | ')
+    : controlOptions.filter(option => option !== 'next').join(' | ')
 
   const option = await text({
     message: 'Player controls...',
-    placeholder: controls
+    placeholder: controls,
+    validate: (value) => mediaPlayerOptionsValidation(value, controlOptions)
   })
 
   handleCancel(option)
 
-  return option
+  return parseOption(option)
 }
 
 /**
