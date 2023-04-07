@@ -16,6 +16,17 @@ export const handleCancel = (propmtResult) => {
   }
 }
 
+export const parseOption = (value) => value.trim().toLowerCase()
+
+export const mediaPlayerOptionsValidation = (value, controls) => {
+  const parsedValue = parseOption(value)
+
+  if (!parsedValue) return 'Please, select an option'
+  if (!controls.includes(parsedValue)) {
+    return 'Enter a valid action'
+  }
+}
+
 /**
  * @typedef {import('ytpl').Item} Item
  * @param {ytpl.Item[]} playlistItems
