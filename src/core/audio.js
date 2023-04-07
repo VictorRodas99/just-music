@@ -8,6 +8,7 @@ import { EventEmitter } from 'node:events'
 
 import Timer from '../utils/timer.js'
 import { PATHS } from '../config.js'
+import { SESSIONS } from '../cli/config.js'
 
 export const mediaPlayerEventHandler = new EventEmitter()
 
@@ -44,11 +45,11 @@ export function playAudio ({ path, song }) {
   if (song) { // If it isn't in autoplay mode
     const songDuration = songDurationToMiliseconds(song.duration)
 
-    if (global.sessionMode === 'playlist') {
-      global.timer = new Timer(() => {
-        mediaPlayerEventHandler.emit('next')
-      }, songDuration) // Call 'next' event when the song ends
-    }
+    const eventToEmit = global.sessionMode === SESSIONS.playlistMode
+      ? () => mediaPlayerEventHandler.emit('next')
+      : () => mediaPlayerEventHandler.emit('end') // just stop if the song ends
+
+    global.timer = new Timer(eventToEmit, songDuration)
   }
 
   const actionsForSystem = {
