@@ -29,13 +29,11 @@ export function handleProcessOutput (mediaPlayerProcess) {
     const mode = parseOutput(chunk.toString())
     const isInPlaylistMode = global.sessionMode === 'playlist'
 
-    if (!isInPlaylistMode) return
-
     if (mode === 'pause') {
       global.timer.pause()
     } else if (mode === 'resume') {
       global.timer.resume()
-    } else if (mode === 'nextsong') {
+    } else if (mode === 'nextsong' && isInPlaylistMode) {
       restartPlayer(mediaPlayerProcess)
       mediaPlayerEventHandler.emit('next')
     }
