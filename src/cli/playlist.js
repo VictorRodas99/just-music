@@ -1,5 +1,5 @@
 import { getPlaylistIDFromUser, playRandomSongFrom } from './utils/playlist.tools.js'
-import { handleCancel } from './utils/cli.general.tools.js'
+import { downloadAndPlay, handleCancel } from './utils/cli.general.tools.js'
 import { mediaPlayerEventHandler } from '../core/audio.js'
 import { OPTIONS, SESSIONS } from './config.js'
 import { select } from '@clack/prompts'
@@ -17,7 +17,21 @@ const randomMode = async (playlist) => {
 }
 
 const inOrderMode = async (playlist) => {
-  // TODO: wait until the last music being played ends
+  global.playlistPlayOption = OPTIONS.playlist.order
+  let currentIndexSong = 0
+
+  mediaPlayerEventHandler.on('order', () => {
+    const song = playlist.items[currentIndexSong]
+    downloadAndPlay(song)
+    currentIndexSong++
+  })
+
+  mediaPlayerEventHandler.on('next', () => {
+    mediaPlayerEventHandler.emit('restart')
+    mediaPlayerEventHandler.emit('order')
+  })
+
+  mediaPlayerEventHandler.emit('order') // First play
 }
 
 const justOneMode = async (playlist) => {
