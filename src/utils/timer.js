@@ -17,7 +17,18 @@ export default class Timer {
     this.callback = callback
     this.timerId = undefined
     this.start = undefined
+    this.isPaused = false
     this.resume()
+  }
+
+  /**
+   * Gets the current time of the timer.
+   * @returns {number} the current time in milliseconds.
+   */
+  currentTime () {
+    return this.isPaused
+      ? this.remaining
+      : this.start + this.remaining - Date.now()
   }
 
   pause () {
@@ -26,13 +37,15 @@ export default class Timer {
     clearTimeout(this.timerId)
     this.timerId = null
     this.remaining -= Date.now() - this.start
+    this.isPaused = true
   }
 
   resume () {
     if (this.timerId) return
 
     this.start = Date.now()
-    this.timerId = setTimeout(this.callback, this.remaining)
+    this.timerId = setTimeout(() => this.callback, this.remaining)
+    this.isPaused = false
   }
 
   /**
@@ -45,7 +58,7 @@ export default class Timer {
     }
 
     this.pause()
-    this.remaining = newDelay ?? this.delay
+    this.remaining = newDelay ?? this.remaining
     this.resume()
   }
 }
