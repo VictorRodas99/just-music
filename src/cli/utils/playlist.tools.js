@@ -1,6 +1,4 @@
 import { handleCancel, getRandomSongFrom, downloadAndPlay } from './cli.general.tools.js'
-import { songDurationToMiliseconds } from '../../utils/tools.js'
-import { restartTimer } from '../../utils/player.tools.js'
 import { text, cancel } from '@clack/prompts'
 import ytpl from 'ytpl'
 
@@ -39,5 +37,4 @@ export const getPlaylistIDFromUser = async () => {
 export const playRandomSongFrom = (playlist) => {
   const song = getRandomSongFrom(playlist.items)
   downloadAndPlay(song)
-  restartTimer(songDurationToMiliseconds(song.duration))
 }
