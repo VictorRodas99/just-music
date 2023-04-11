@@ -1,7 +1,8 @@
 import { handleCancel, downloadAndPlay, mediaPlayerOptionsValidation, parseOption } from './utils/cli.general.tools.js'
 import { getVideosBySearch } from '../core/download.tools.js'
-import { intro, select, text, spinner, confirm } from '@clack/prompts'
+import { intro, select, text, spinner } from '@clack/prompts'
 import { mediaPlayerEventHandler } from '../core/audio.js'
+import { handleSongEnd } from './utils/single.tools.js'
 import { handleSingleModeByLink } from './single.js'
 import { handlePlaylistMode } from './playlist.js'
 import { mapResults } from '../utils/tools.js'
@@ -113,22 +114,7 @@ export async function handleSearchByName (isNext = false) {
   const songSelected = await giveOptionsToUser(results)
   downloadAndPlay(songSelected)
 
-  mediaPlayerEventHandler.on('end', async () => {
-    mediaPlayerEventHandler.emit('restart')
-
-    const shouldContinue = await confirm({
-      message: 'Do you want to continue?',
-      initialValue: false
-    })
-
-    handleCancel(shouldContinue)
-
-    if (!shouldContinue) {
-      process.exit(0)
-    }
-
-    return handleSearchByName(true)
-  })
+  mediaPlayerEventHandler.once('end', () => setImmediate(handleSongEnd))
 }
 
 export async function handleSearchByLink () {
