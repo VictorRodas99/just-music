@@ -7,7 +7,7 @@ import { spawn } from 'node:child_process'
 import { EventEmitter } from 'node:events'
 
 import { PATHS } from '../config.js'
-import { SESSIONS } from '../cli/config.js'
+import { OPTIONS, SESSIONS } from '../cli/config.js'
 
 export const mediaPlayerEventHandler = new EventEmitter()
 
@@ -53,7 +53,7 @@ export function playAudio ({ path, song }) {
   if (song) { // If it isn't in autoplay mode
     const songDuration = songDurationToMiliseconds(song.duration)
 
-    const eventToEmit = global.sessionMode === SESSIONS.playlistMode
+    const eventToEmit = global.sessionMode === SESSIONS.playlistMode && global.playlistPlayOption !== OPTIONS.playlist.one
       ? () => mediaPlayerEventHandler.emit('next')
       : () => mediaPlayerEventHandler.emit('end') // just stop if the song ends
 
