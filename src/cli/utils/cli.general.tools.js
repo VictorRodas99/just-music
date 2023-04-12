@@ -69,10 +69,10 @@ export const logSongProgress = (songDuration, callbackWhenSongEnds) => {
 
 /**
  * @typedef {import('../interactions.js').SongInfo} SongInfo
- * @param {SongInfo} song
+ * @typedef {import('ytpl').Item} Item
+ * @param {SongInfo | Item} song
  */
 export const downloadAndPlay = async (song) => {
-  // TODO: validate if song is of type SongInfo
   const songDuration = songDurationToMiliseconds(song.duration)
 
   restartTimer(songDuration)
