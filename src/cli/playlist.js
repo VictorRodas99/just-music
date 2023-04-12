@@ -5,6 +5,11 @@ import { OPTIONS, SESSIONS } from './config.js'
 import { select } from '@clack/prompts'
 import ytpl from 'ytpl'
 
+import { EventEmitter } from 'node:events'
+import color from 'picocolors'
+
+const pageEventsEmitter = new EventEmitter()
+
 const randomMode = async (playlist) => {
   global.playlistPlayOption = OPTIONS.playlist.random
 
@@ -34,8 +39,85 @@ const inOrderMode = async (playlist) => {
   mediaPlayerEventHandler.emit('order') // First play
 }
 
-const justOneMode = async (playlist) => {
+/**
+ * @typedef {import('ytpl').Result} Playlist
+ * @typedef {import('ytpl').Item} Item
+ *
+ * @param {Playlist} playlist
+ * @param {{ page: number, startIndex: number, endIndex: number }} argsForNextCall
+ */
+const justOneMode = async (playlist, argsForNextCall = undefined) => {
+  if (!argsForNextCall) {
+    global.playlistPlayOption = OPTIONS.playlist.one
+  }
 
+  const songs = playlist.items
+  const limit = 5
+
+  let page = argsForNextCall ? argsForNextCall.page : 1
+  let startIndex = argsForNextCall ? argsForNextCall.startIndex : 0
+  let endIndex = argsForNextCall ? argsForNextCall.endIndex : limit
+
+  const nextPageOrDownloadSong = async (startIndex, endIndex) => {
+    const result = songs.slice(startIndex, endIndex)
+    const emitPageEvent = (eventName) => pageEventsEmitter.emit(eventName)
+
+    /**
+     * @param {Item} song
+     */
+    const mapOptions = (song) => ({ value: song, label: song.title })
+    const getPageOptions = () => {
+      if (startIndex >= songs.length) {
+        return [
+          { value: () => emitPageEvent('previousPage'), label: color.inverse('Go to previous section') }
+        ]
+      }
+
+      return startIndex > 0
+        ? [
+            { value: () => emitPageEvent('nextPage'), label: color.inverse('Go to next section') },
+            { value: () => emitPageEvent('previousPage'), label: color.inverse('Go to previous section') }
+          ]
+        : [{ value: () => emitPageEvent('nextPage'), label: color.inverse('Go to next section') }]
+    }
+
+    const selectedOption = await select({
+      message: `${playlist.title} (Section ${page})`,
+      options: result.map(mapOptions).concat(getPageOptions())
+    })
+
+    handleCancel(selectedOption)
+
+    if (typeof selectedOption === 'function') {
+      selectedOption() // emit page event
+    } else {
+      downloadAndPlay(selectedOption)
+    }
+  }
+
+  if (!argsForNextCall) {
+    pageEventsEmitter.on('nextPage', () => {
+      page += 1
+
+      startIndex = (page - 1) * limit
+      endIndex = page * limit
+      nextPageOrDownloadSong(startIndex, endIndex)
+    })
+
+    pageEventsEmitter.on('previousPage', () => {
+      page -= 1
+
+      startIndex = (page - 1) * limit
+      endIndex = page * limit
+      nextPageOrDownloadSong(startIndex, endIndex)
+    })
+  }
+
+  nextPageOrDownloadSong(startIndex, endIndex) // first iteration
+
+  mediaPlayerEventHandler.once('end', () => {
+    justOneMode(playlist, { page, startIndex, endIndex })
+  })
 }
 
 export async function handlePlaylistMode () {
