@@ -6,7 +6,7 @@ import { handleSongEnd } from './utils/single.tools.js'
 import { handleSingleModeByLink } from './single.js'
 import { handlePlaylistMode } from './playlist.js'
 import { mapResults } from '../utils/tools.js'
-import { SESSIONS } from './config.js'
+import { OPTIONS, SESSIONS } from './config.js'
 import color from 'picocolors'
 
 /**
@@ -19,7 +19,7 @@ import color from 'picocolors'
 export async function getMediaPlayerAction () {
   const controlOptions = ['pause', 'resume', 'next', 'close']
 
-  const controls = global.sessionMode === 'playlist'
+  const controls = global.sessionMode === 'playlist' && global.playlistPlayOption !== OPTIONS.playlist.one
     ? controlOptions.join(' | ')
     : controlOptions.filter(option => option !== 'next').join(' | ')
 
