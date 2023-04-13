@@ -1,3 +1,50 @@
+export const isLiteralObject = (value) => {
+  if (value === null || value === undefined) return false
+
+  return typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype
+}
+
+/**
+ * Validates an object based on specified criteria
+ *
+ * @param {*} data - The object to be validated
+ * @param {object} options - The options for validation
+ * @param {function} options.avoid - The function that determines if a value should be avoided
+ * @param {Array<string>} [options.keysRequired=[]] - The array of required keys in the object
+ *
+ * @returns {object} The validated object
+ */
+export const validateObject = (data, { avoid, keysRequired = [] }) => {
+  if (!isLiteralObject(data)) {
+    throw new Error('Given argument must be a literal object')
+  }
+
+  const values = Object.values(data)
+
+  if (values.length <= 0) {
+    throw new Error('There is no data in the object')
+  }
+
+  const existsExcluded = values.filter(avoid).length
+
+  if (existsExcluded) {
+    throw new Error('Exists invalid data in given object')
+  }
+
+  const isArrayOfStrings = keysRequired.every((key) => typeof key === 'string')
+
+  if (isArrayOfStrings) {
+    const givenKeys = Object.keys(data)
+    const existsInvalidKeys = givenKeys.some((key) => !keysRequired.includes(key))
+
+    if (existsInvalidKeys) {
+      throw new Error('Invalid keys provided for this object')
+    }
+  }
+
+  return data
+}
+
 export const otherSystemMessage = () => {
   console.log(`${process.platform} not supported`)
   process.exit(1)
