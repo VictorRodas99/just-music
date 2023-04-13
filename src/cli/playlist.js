@@ -1,14 +1,14 @@
-import { getPlaylistIDFromUser, playRandomSongFrom } from './utils/playlist.tools.js'
+import { getPlaylistIDFromUser, playRandomSongFrom, nextPageOrDownloadSong, paginate } from './utils/playlist.tools.js'
 import { downloadAndPlay, handleCancel } from './utils/cli.general.tools.js'
 import { mediaPlayerEventHandler } from '../core/audio.js'
+import { validateObject } from '../utils/tools.js'
 import { OPTIONS, SESSIONS } from './config.js'
 import { select } from '@clack/prompts'
 import ytpl from 'ytpl'
 
 import { EventEmitter } from 'node:events'
-import color from 'picocolors'
 
-const pageEventsEmitter = new EventEmitter()
+export const pageEventsEmitter = new EventEmitter()
 
 const randomMode = async (playlist) => {
   global.playlistPlayOption = OPTIONS.playlist.random
@@ -40,80 +40,70 @@ const inOrderMode = async (playlist) => {
 }
 
 /**
- * @typedef {import('ytpl').Result} Playlist
- * @typedef {import('ytpl').Item} Item
- *
- * @param {Playlist} playlist
+ * @param {ytpl.Result} playlist
  * @param {{ page: number, startIndex: number, endIndex: number }} argsForNextCall
  */
-const justOneMode = async (playlist, argsForNextCall = undefined) => {
-  if (!argsForNextCall) {
-    global.playlistPlayOption = OPTIONS.playlist.one
-  }
+async function justOneMode (
+  playlist,
+  argsForNextCall = { page: 0, startIndex: 0, endIndex: 0 }
+) {
+  global.playlistPlayOption = OPTIONS.playlist.one
 
-  const songs = playlist.items
+  argsForNextCall = validateObject(
+    argsForNextCall,
+    {
+      avoid: (value) => typeof value !== 'number',
+      keysRequired: ['page', 'startIndex', 'endIndex']
+    }
+  )
+
   const limit = 5
+  const totalSongs = playlist.items
 
-  let page = argsForNextCall ? argsForNextCall.page : 1
-  let startIndex = argsForNextCall ? argsForNextCall.startIndex : 0
-  let endIndex = argsForNextCall ? argsForNextCall.endIndex : limit
+  let page = argsForNextCall.page || 1
+  let startIndex = argsForNextCall.startIndex || 0
+  let endIndex = argsForNextCall.endIndex || limit
 
-  const nextPageOrDownloadSong = async (startIndex, endIndex) => {
-    const result = songs.slice(startIndex, endIndex)
-    const emitPageEvent = (eventName) => pageEventsEmitter.emit(eventName)
-
-    /**
-     * @param {Item} song
-     */
-    const mapOptions = (song) => ({ value: song, label: song.title })
-    const getPageOptions = () => {
-      if (startIndex >= songs.length) {
-        return [
-          { value: () => emitPageEvent('previousPage'), label: color.inverse('Go to previous section') }
-        ]
-      }
-
-      return startIndex > 0
-        ? [
-            { value: () => emitPageEvent('nextPage'), label: color.inverse('Go to next section') },
-            { value: () => emitPageEvent('previousPage'), label: color.inverse('Go to previous section') }
-          ]
-        : [{ value: () => emitPageEvent('nextPage'), label: color.inverse('Go to next section') }]
-    }
-
-    const selectedOption = await select({
-      message: `${playlist.title} (Section ${page})`,
-      options: result.map(mapOptions).concat(getPageOptions())
-    })
-
-    handleCancel(selectedOption)
-
-    if (typeof selectedOption === 'function') {
-      selectedOption() // emit page event
-    } else {
-      downloadAndPlay(selectedOption)
-    }
-  }
-
-  if (!argsForNextCall) {
+  if (argsForNextCall.page === 0) {
     pageEventsEmitter.on('nextPage', () => {
-      page += 1
+      const newData = paginate({
+        playlist,
+        page,
+        limit,
+        mode: 'next'
+      })
 
-      startIndex = (page - 1) * limit
-      endIndex = page * limit
-      nextPageOrDownloadSong(startIndex, endIndex)
+      page = newData.page
+      startIndex = newData.startIndex
+      endIndex = newData.endIndex
     })
 
     pageEventsEmitter.on('previousPage', () => {
-      page -= 1
+      const newData = paginate({
+        playlist,
+        page,
+        limit,
+        mode: 'back'
+      })
 
-      startIndex = (page - 1) * limit
-      endIndex = page * limit
-      nextPageOrDownloadSong(startIndex, endIndex)
+      page = newData.page
+      startIndex = newData.startIndex
+      endIndex = newData.endIndex
     })
   }
 
-  nextPageOrDownloadSong(startIndex, endIndex) // first iteration
+  const firstSongs = totalSongs.slice(startIndex, endIndex)
+  const firstConditions = {
+    existsNextPage: true,
+    existsPreviousPage: false
+  }
+
+  nextPageOrDownloadSong({
+    songs: firstSongs,
+    playlistTitle: playlist.title,
+    currentPage: page,
+    conditions: firstConditions
+  }) // first iteration
 
   mediaPlayerEventHandler.once('end', () => {
     justOneMode(playlist, { page, startIndex, endIndex })
@@ -134,7 +124,9 @@ export async function handlePlaylistMode () {
   })
 
   handleCancel(playOption)
-  global.playlist = await ytpl(playlistID)
+  global.playlist = await ytpl(playlistID) // TODO: handle error if playlist isn't found
+
+  // Error: API-Error: The playlist does not exist.
 
   const playMode = {
     random: randomMode,
