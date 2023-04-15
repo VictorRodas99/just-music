@@ -1,5 +1,5 @@
 import { handleCancel, getRandomSongFrom, downloadAndPlay } from './cli.general.tools.js'
-import { text, cancel, select } from '@clack/prompts'
+import { text, select } from '@clack/prompts'
 import { pageEventsEmitter } from '../playlist.js'
 import color from 'picocolors'
 import ytpl from 'ytpl'
@@ -7,30 +7,29 @@ import ytpl from 'ytpl'
 export const getPlaylistIDFromUser = async () => {
   const playlistUrl = await text({
     message: 'Give the playlist link',
-    placeholder: 'here...'
+    placeholder: 'here...',
+    validate: (value) => {
+      const errorMessage = 'Is not a valid playlist link!'
+
+      try {
+        ytpl.getPlaylistID(playlistUrl)
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('Unable to find a id')) {
+          return errorMessage
+        }
+      }
+
+      const isValid = ytpl.validateID(value)
+
+      if (!isValid) {
+        return errorMessage
+      }
+    }
   })
 
   handleCancel(playlistUrl)
 
-  let playlistID
-
-  try {
-    playlistID = await ytpl.getPlaylistID(playlistUrl)
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('Unable to find a id')) {
-      cancel('The given url is not valid!')
-      process.exit(1)
-    }
-  }
-
-  const isValid = ytpl.validateID(playlistID)
-
-  if (!isValid) {
-    cancel('The given url is not valid!')
-    process.exit(1)
-  }
-
-  return playlistID
+  return playlistUrl
 }
 
 /**
