@@ -3,7 +3,7 @@ import { downloadAndPlay, handleCancel } from './utils/cli.general.tools.js'
 import { mediaPlayerEventHandler } from '../core/audio.js'
 import { validateObject } from '../utils/tools.js'
 import { OPTIONS, SESSIONS } from './config.js'
-import { select } from '@clack/prompts'
+import { cancel, select } from '@clack/prompts'
 import ytpl from 'ytpl'
 
 import { EventEmitter } from 'node:events'
@@ -124,9 +124,17 @@ export async function handlePlaylistMode () {
   })
 
   handleCancel(playOption)
-  global.playlist = await ytpl(playlistID) // TODO: handle error if playlist isn't found
 
-  // Error: API-Error: The playlist does not exist.
+  try {
+    global.playlist = await ytpl(playlistID)
+  } catch (error) {
+    const unknowPlaylistMessage = 'Unknown Playlist'
+
+    if (error.message === unknowPlaylistMessage) {
+      cancel(unknowPlaylistMessage)
+      process.exit(1)
+    }
+  }
 
   const playMode = {
     random: randomMode,
