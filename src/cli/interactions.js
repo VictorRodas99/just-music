@@ -96,7 +96,7 @@ export async function handleSearchByName (isNext = false) {
   const loader = spinner()
 
   const query = await text({
-    message: `What's the name of your ${isNext && 'next'} song?`,
+    message: `What's the name of your${isNext ? ' next' : ''} song?`,
     placeholder: 'Around the world - Daft Punk',
     validate: (value) => {
       if (!value.trim()) return 'Please, enter the name of the song or the artist'
