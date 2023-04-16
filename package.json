@@ -17,7 +17,7 @@
   "dependencies": {
     "@clack/prompts": "^0.6.3",
     "picocolors": "^1.0.0",
-    "ytdl-core": "git+ssh://git@github.com:khlevon/node-ytdl-core.git#v4.11.3-patch.1",
+    "ytdl-core": "^4.11.4",
     "ytpl": "^2.3.0",
     "ytsr": "^3.8.0"
   },
