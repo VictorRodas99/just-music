@@ -1,13 +1,14 @@
-import { restartPlayer } from '../../utils/player.tools.js'
 import { getMediaPlayerAction } from '../../cli/interactions.js'
+import { restartPlayer } from '../../utils/player.tools.js'
 import { mediaPlayerEventHandler } from '../audio.js'
 import { parseOutput } from '../../utils/tools.js'
+import { spawn } from 'node:child_process'
 
 /**
  * @typedef {import('node:child_process').ChildProcessWithoutNullStreams} Process
  * @param {Process} mediaPlayerProcess
  */
-export async function handleUserInput (mediaPlayerProcess) {
+async function handleUserInput (mediaPlayerProcess) {
   while (true) {
     const userOption = await getMediaPlayerAction()
     mediaPlayerProcess.stdin.write(`${userOption}\n`)
@@ -24,7 +25,7 @@ export async function handleUserInput (mediaPlayerProcess) {
  * @typedef {import('node:child_process').ChildProcessWithoutNullStreams} Process
  * @param {Process} mediaPlayerProcess
  */
-export function handleProcessOutput (mediaPlayerProcess) {
+function handleProcessOutput (mediaPlayerProcess) {
   const outputHandler = (chunk) => {
     const mode = parseOutput(chunk.toString())
     const isInPlaylistMode = global.sessionMode === 'playlist'
@@ -46,8 +47,22 @@ export function handleProcessOutput (mediaPlayerProcess) {
  * @typedef {import('node:child_process').ChildProcessWithoutNullStreams} Process
  * @param {Process} mediaPlayerProcess
  */
-export function handleProcessError (mediaPlayerProcess) {
+function handleProcessError (mediaPlayerProcess) {
   mediaPlayerProcess.stderr.on('data', (chunk) => {
     console.error(chunk.toString())
   })
+}
+
+/**
+ * @param {string} mainProcessName
+ * @param {Array<string>} args
+ */
+export function executeAudioScript (mainProcessName, args) {
+  const mediaPlayerProcess = spawn(mainProcessName, args)
+
+  mediaPlayerEventHandler.on('restart', () => restartPlayer(mediaPlayerProcess))
+
+  handleProcessOutput(mediaPlayerProcess)
+  handleProcessError(mediaPlayerProcess)
+  handleUserInput(mediaPlayerProcess)
 }
