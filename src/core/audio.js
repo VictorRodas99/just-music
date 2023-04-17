@@ -1,13 +1,10 @@
-import { handleProcessError, handleProcessOutput, handleUserInput } from './utils/mediaPlayer.tools.js'
-import { otherSystemMessage, songDurationToMiliseconds } from '../utils/tools.js'
 import { cliErrorMessage, logSongProgress } from '../cli/utils/cli.general.tools.js'
-import { restartPlayer } from '../utils/player.tools.js'
-
-import { spawn } from 'node:child_process'
-import { EventEmitter } from 'node:events'
-
-import { PATHS } from '../config.js'
+import { otherSystemMessage, songDurationToMiliseconds } from '../utils/tools.js'
+import { executeAudioScript } from './utils/mediaPlayer.tools.js'
 import { OPTIONS, SESSIONS } from '../cli/config.js'
+import { PATHS } from '../config.js'
+
+import { EventEmitter } from 'node:events'
 
 export const mediaPlayerEventHandler = new EventEmitter()
 
@@ -19,17 +16,18 @@ const playAudioForWindows = async (audioPath) => {
   const scriptPath = PATHS.scripts('music-player.ps1')
   const args = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, audioPath]
 
-  const mediaPlayerProcess = spawn('Powershell.exe', args)
-
-  mediaPlayerEventHandler.on('restart', () => restartPlayer(mediaPlayerProcess))
-
-  handleProcessOutput(mediaPlayerProcess)
-  handleProcessError(mediaPlayerProcess)
-  handleUserInput(mediaPlayerProcess)
+  executeAudioScript('Powershell.exe', args)
 }
 
 const playAudioForLinux = (audioPath) => {
-  cliErrorMessage('Linux not supported yet')
+  if (!audioPath || typeof audioPath !== 'string') {
+    throw new Error(`Invalid audio path... (${audioPath})`)
+  }
+
+  const scriptPath = PATHS.scripts('music-player.sh')
+  const args = [scriptPath, audioPath]
+
+  executeAudioScript('bash', args)
 }
 
 const playAudioForMacOs = (audioPath) => {
