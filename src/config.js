@@ -53,7 +53,7 @@ function getScriptPath (scriptName) {
 
   const extensions = {
     windows: ['ps1', 'bat'],
-    unix: ['.sh', '.zsh']
+    unix: ['sh', 'zsh']
   }
 
   const entries = Object.entries(extensions)
