@@ -1,4 +1,5 @@
-import { handleCancel, downloadAndPlay, mediaPlayerOptionsValidation, parseOption } from './utils/cli.general.tools.js'
+import { handleCancel, downloadAndPlay, mediaPlayerOptionsValidation, parseOption, cliErrorMessage } from './utils/cli.general.tools.js'
+import { validateSingleVideoURL, validatePlaylistURL } from '../utils/validations.js'
 import { getVideosBySearch } from '../core/download.tools.js'
 import { intro, select, text, spinner } from '@clack/prompts'
 import { mediaPlayerEventHandler } from '../core/audio.js'
@@ -88,22 +89,32 @@ export async function setupMainOption () {
   return linkOrName
 }
 
-export async function handleSearchByName (isNext = false) {
+/**
+ *
+ * @param {{ payload: string } | {}} oneLineCall
+ * @param {boolean} isNext
+ */
+export async function handleSearchByName (oneLineCall = {}, isNext = false) {
   if (!isNext) {
     global.sessionMode = SESSIONS.singleMode
   }
 
   const loader = spinner()
+  let query
 
-  const query = await text({
-    message: `What's the name of your${isNext ? ' next' : ''} song?`,
-    placeholder: 'Around the world - Daft Punk',
-    validate: (value) => {
-      if (!value.trim()) return 'Please, enter the name of the song or the artist'
-    }
-  })
+  if (oneLineCall.payload) {
+    query = oneLineCall.payload
+  } else {
+    query = await text({
+      message: `What's the name of your${isNext ? ' next' : ''} song?`,
+      placeholder: 'Around the world - Daft Punk',
+      validate: (value) => {
+        if (!value.trim()) return 'Please, enter the name of the song or the artist'
+      }
+    })
 
-  handleCancel(query)
+    handleCancel(query)
+  }
 
   loader.start('Searching for the song...')
 
@@ -111,26 +122,46 @@ export async function handleSearchByName (isNext = false) {
 
   loader.stop()
 
-  const songSelected = await giveOptionsToUser(results)
+  const songSelected = oneLineCall.payload
+    ? results.at(0)
+    : await giveOptionsToUser(results)
+
   downloadAndPlay(songSelected)
 
   mediaPlayerEventHandler.once('end', () => setImmediate(handleSongEnd))
 }
 
-export async function handleSearchByLink () {
-  const singleOrPlaylist = await select({
-    message: 'Only a single song or a playlist?',
-    options: [
-      { value: 'playlist', label: 'Show all the songs in a playlist' },
-      { value: 'link', label: 'Link', hint: 'Just one specific song' }
-    ]
-  })
+export async function handleSearchByLink (oneLineCall = {}) {
+  if (!oneLineCall.payload) {
+    const singleOrPlaylist = await select({
+      message: 'Only a single song or a playlist?',
+      options: [
+        { value: 'playlist', label: 'Show all the songs in a playlist' },
+        { value: 'link', label: 'Link', hint: 'Just one specific song' }
+      ]
+    })
 
-  handleCancel(singleOrPlaylist)
+    handleCancel(singleOrPlaylist)
 
-  const finalAction = singleOrPlaylist === 'playlist'
-    ? handlePlaylistMode
-    : handleSingleModeByLink
+    const finalAction = singleOrPlaylist === 'playlist'
+      ? handlePlaylistMode
+      : handleSingleModeByLink
 
-  finalAction()
+    return finalAction()
+  }
+
+  const givenLink = oneLineCall.payload
+  const invalidLinkError = validateSingleVideoURL(givenLink)
+
+  if (invalidLinkError) {
+    const invalidPlaylistError = validatePlaylistURL(givenLink)
+
+    if (!invalidPlaylistError) {
+      return handlePlaylistMode({ payload: givenLink })
+    }
+
+    return cliErrorMessage(invalidLinkError)
+  }
+
+  handleSingleModeByLink({ payload: givenLink })
 }
