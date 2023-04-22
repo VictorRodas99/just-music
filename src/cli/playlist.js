@@ -110,9 +110,12 @@ async function justOneMode (
   })
 }
 
-export async function handlePlaylistMode () {
+/**
+ * @param {{ payload: string } | {}} oneLineCall
+ */
+export async function handlePlaylistMode (oneLineCall = {}) {
   global.sessionMode = SESSIONS.playlistMode
-  const playlistID = await getPlaylistIDFromUser()
+  const playlistID = oneLineCall.payload ?? await getPlaylistIDFromUser()
 
   const playOption = await select({
     message: 'Select the mode you want',

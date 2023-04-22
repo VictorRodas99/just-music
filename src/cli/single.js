@@ -1,4 +1,5 @@
 import { downloadAndPlay, handleCancel } from './utils/cli.general.tools.js'
+import { validateSingleVideoURL } from '../utils/validations.js'
 import { formatTime } from '../utils/tools.js'
 import { text, cancel } from '@clack/prompts'
 import { SESSIONS } from './config.js'
@@ -21,9 +22,7 @@ const getURLFromUser = async () => {
   const url = await text({
     message: 'Give the youtube link',
     placeholder: 'here...',
-    validate: (value) => {
-      if (!ytdl.validateURL(value)) return 'It is not a valid video url!'
-    }
+    validate: validateSingleVideoURL
   })
 
   handleCancel(url)
@@ -31,10 +30,13 @@ const getURLFromUser = async () => {
   return url
 }
 
-export async function handleSingleModeByLink () {
+/**
+ * @param {{ payload: string } | {}} oneLineCall
+ */
+export async function handleSingleModeByLink (oneLineCall = {}) {
   global.sessionMode = SESSIONS.singleMode
 
-  const givenUrl = await getURLFromUser()
+  const givenUrl = oneLineCall.payload ?? await getURLFromUser()
   let generalVideoInfo
 
   try {
