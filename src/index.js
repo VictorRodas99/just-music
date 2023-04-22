@@ -1,28 +1,42 @@
-import { autoplay } from './cli/utils/cli.general.tools.js'
+import { autoplay, cliErrorMessage } from './cli/utils/cli.general.tools.js'
 import {
   setupMainOption,
   handleSearchByName,
   handleSearchByLink
 } from './cli/interactions.js'
-import { developMode } from './utils/tools.js'
+import { handleArgumentsByCall } from './utils/handleArgs.js'
 
 const showError = console.error
 
 async function main () {
-  developMode(process.argv[2] === '--dev')
   console.clear()
+  const options = handleArgumentsByCall(process.argv)
 
-  if (process.argv[3] === '--autoplay') {
+  if (options.mode === 'autoplay') {
     return autoplay()
   }
 
-  const mainOption = await setupMainOption()
+  if (options.mode === 'normal') {
+    const mainOption = await setupMainOption()
 
-  const mainAction = mainOption === 'name'
+    const mainAction = mainOption === 'name'
+      ? handleSearchByName
+      : handleSearchByLink
+
+    return mainAction()
+  }
+
+  const { mode, payload } = options
+
+  if (mode === 'error') {
+    return cliErrorMessage(payload)
+  }
+
+  const mainAction = mode === '-name'
     ? handleSearchByName
     : handleSearchByLink
 
-  mainAction()
+  return mainAction({ payload })
 }
 
 main().catch(showError)
