@@ -1,3 +1,4 @@
+import { createOutputFolder } from './utils/checkFolder.js'
 import { createWriteStream } from 'node:fs'
 import { PATHS } from '../config.js'
 import ytdl from 'ytdl-core'
@@ -13,6 +14,7 @@ export const getAudioFormatsFromUrl = async (url) => {
 }
 
 export const createStream = () => {
+  createOutputFolder()
   const samplePath = PATHS.audio('sample.mp3')
 
   if (currentStream) {
