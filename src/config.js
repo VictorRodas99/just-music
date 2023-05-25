@@ -4,7 +4,7 @@ import path from 'path'
 const configPath = url.fileURLToPath(import.meta.url)
 export const srcRootPath = path.dirname(configPath)
 
-const FOLDERS = {
+export const FOLDERS = {
   audio: 'outputs',
   mediaPlayerScripts: 'scripts'
 }
