@@ -137,7 +137,7 @@ export const formatTime = (milliseconds) => {
 }
 
 /**
- * The initial duration format must be in ```mm:ss```
+ * The initial duration format must be in ```mm:ss``` or ```hh:mm:ss```
  * @param {string} duration
  * @returns {number} ```durationInMilliseconds```
  */
@@ -148,13 +148,22 @@ export const songDurationToMiliseconds = (duration) => {
     throw new TypeError(errorMessage)
   }
 
-  if (duration.includes(':')) {
-    const [minutes, seconds] = duration.split(':').map(parseNumber)
-    const totalSeconds = (minutes * 60) + seconds
-    const totalMiliseconds = totalSeconds * 1_000
-
-    return totalMiliseconds
+  if (!duration.includes(':')) {
+    throw new Error(errorMessage)
   }
 
-  throw new Error(errorMessage)
+  const durations = duration.split(':').map(parseNumber)
+  const isLessThanAnHour = durations.length === 2
+
+  if (isLessThanAnHour) {
+    const [minutes, seconds] = durations
+    const totalSeconds = (minutes * 60) + seconds
+
+    return totalSeconds * 1_000
+  }
+
+  const [hours, minutes, seconds] = durations
+  const totalSeconds = (hours * 3_600) + (minutes * 60) + seconds
+
+  return totalSeconds * 1_000
 }
