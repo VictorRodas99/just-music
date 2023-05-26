@@ -3,6 +3,7 @@ import { createWriteStream } from 'node:fs'
 import { PATHS } from '../config.js'
 import ytdl from 'ytdl-core'
 import ytSearch from 'ytsr'
+import { songDurationToMiliseconds } from '../utils/tools.js'
 
 let currentStream = null
 
@@ -36,7 +37,10 @@ export async function getVideosBySearch (query) {
   }
 
   const rawResults = await ytSearch(query)
-  const onlyVideos = rawResults.items.filter((item) => item.type === 'video')
+  const onlyVideos = rawResults.items.filter(
+    (item) => item.type === 'video' &&
+              songDurationToMiliseconds(item.duration ?? '00:00') <= 1_500_000 // filter videos that exceeds 20 minutes
+  )
 
   return onlyVideos
 }
