@@ -49,7 +49,7 @@ export async function giveOptionsToUser (results) {
   }
 
   if (results.length <= 0) {
-    throw new Error(errorMessage)
+    cliErrorMessage(errorMessage)
   }
 
   const mappedResults = mapResults({ results, limit: 5 })
