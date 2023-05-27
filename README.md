@@ -1,3 +1,15 @@
-# just-music
+<div align="center">
 
-A command-line interface (CLI) tool that lets you listen music on your computer without any distractions. Just type in your favorite song, and let __just-music__ do the rest. It's just that easy! So why settle for just any music app, when you can have __just-music__?
+# just-music 🎵
+
+<hr>
+
+```just-music``` is a command-line interface [(CLI)](https://en.wikipedia.org/wiki/Command-line_interface) tool that lets you listen songs from youtube on your computer without using a browser.
+
+</div>
+
+----
+
+![presentation](https://raw.githubusercontent.com/VictorRodas99/just-music/main/docs/imgs/just-music-screen-2.png)
+
+> Just type in your favorite song, and let ```just-music``` do the rest.
