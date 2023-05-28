@@ -4,6 +4,7 @@ import path from 'path'
 const configPath = url.fileURLToPath(import.meta.url)
 export const srcRootPath = path.dirname(configPath)
 
+export const CURRENT_APP_VERSION = '1.0.0'
 export const MAX_SONG_DURATION_MS = 1_500_000
 
 export const MODES = {
@@ -12,7 +13,8 @@ export const MODES = {
   error: 'error',
   byName: '-name',
   byLink: '-link',
-  dev: '--dev'
+  dev: '--dev',
+  version: '--version'
 }
 
 export const FOLDERS = {
