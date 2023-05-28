@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import { cliErrorMessage } from './cli/utils/cli.general.tools.js'
 import {
   setupMainOption,
