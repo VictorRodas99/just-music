@@ -1,22 +1,25 @@
-import { autoplay, cliErrorMessage } from './cli/utils/cli.general.tools.js'
+import { cliErrorMessage } from './cli/utils/cli.general.tools.js'
 import {
   setupMainOption,
   handleSearchByName,
   handleSearchByLink
 } from './cli/interactions.js'
 import { handleArgumentsByCall } from './utils/handleArgs.js'
+import { logHelpMessage } from './cli/utils/logMessage.js'
+import { MODES } from './config.js'
 
 const showError = console.error
 
 async function main () {
-  console.clear()
   const options = handleArgumentsByCall(process.argv)
 
-  if (options.mode === 'autoplay') {
-    return autoplay()
+  if (options.mode === MODES.help) {
+    return logHelpMessage()
   }
 
-  if (options.mode === 'normal') {
+  console.clear()
+
+  if (options.mode === MODES.normal) {
     const mainOption = await setupMainOption()
 
     const mainAction = mainOption === 'name'
@@ -28,11 +31,11 @@ async function main () {
 
   const { mode, payload } = options
 
-  if (mode === 'error') {
+  if (mode === MODES.error) {
     return cliErrorMessage(payload)
   }
 
-  const mainAction = mode === '-name'
+  const mainAction = mode === MODES.byName
     ? handleSearchByName
     : handleSearchByLink
 

@@ -1,55 +1,56 @@
 import { developMode } from './tools.js'
+import { MODES } from '../config.js'
 
 /**
- * @typedef {{ mode: ('autoplay' | 'normal') }} PureMode
+ * @typedef {{ mode: ('help' | 'normal') }} PureMode
  * @typedef {{ mode: ('error' | '-name' | '-link'), payload: string }} ModePayload
  *
  * @param {Array<string>} args
  * @returns {PureMode | ModePayload}
  */
 export function handleArgumentsByCall (args) {
+  const ERROR_PAYLOAD = {
+    mode: MODES.error,
+    payload: 'Invalid or missing mode were given'
+  }
+
   const givenModes = args.filter((arg) => arg.startsWith('-'))
 
-  developMode(givenModes.includes('--dev'))
+  developMode(givenModes.includes(MODES.dev))
 
-  if (givenModes.includes('--autoplay')) {
+  if (givenModes.includes(MODES.help)) {
     return {
-      mode: 'autoplay'
+      mode: MODES.help
     }
   }
 
   const givenPlayModes = givenModes.filter(
-    (arg) => arg !== '--dev'
+    (arg) => arg !== MODES.dev
   )
 
   if (givenPlayModes.length === 0) {
     return {
-      mode: 'normal'
+      mode: MODES.normal
     }
   }
 
-  const validPlayModes = ['-name', '-link']
-  const [mode] = givenPlayModes.filter((arg) => validPlayModes.includes(arg))
+  const mode = givenPlayModes.find(
+    (arg) => arg === MODES.byName || arg === MODES.byLink
+  )
 
   if (!mode) {
-    return {
-      mode: 'error',
-      payload: 'Invalid or missing mode were given'
-    }
+    return ERROR_PAYLOAD
   }
 
-  const indexOfName = args.indexOf(mode) + 1
-  const givenName = args.at(indexOfName)
+  const indexOfParam = args.indexOf(mode) + 1
+  const givenParametter = args.at(indexOfParam)
 
-  if (!givenName) {
-    return {
-      mode: 'error',
-      payload: 'Invalid or missing name were given'
-    }
+  if (!givenParametter) {
+    return ERROR_PAYLOAD
   }
 
   return {
     mode,
-    payload: givenName
+    payload: givenParametter
   }
 }
