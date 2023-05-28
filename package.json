@@ -1,19 +1,24 @@
 {
-  "name": "youtube-experiments",
+  "name": "just-music",
   "version": "1.0.0",
-  "description": "",
+  "description": "A command-line interface (CLI) tool that lets you listen music on your terminal",
   "main": "src/index.js",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/VictorRodas99/just-music.git"
+  },
   "scripts": {
     "start": "node src/index.js",
     "dev": "node src/index.js --dev",
-    "autoplay": "node src/index.js --dev --autoplay",
     "by-name": "node src/index.js -name",
     "by-link": "node src/index.js -link",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "music", "youtube", "downloads"
+  ],
+  "author": "Víctor Rodas",
   "license": "ISC",
   "dependencies": {
     "@clack/prompts": "^0.6.3",
