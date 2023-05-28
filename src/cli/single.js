@@ -1,9 +1,10 @@
-import { downloadAndPlay, handleCancel } from './utils/cli.general.tools.js'
+import { cliErrorMessage, downloadAndPlay, handleCancel } from './utils/cli.general.tools.js'
 import { validateSingleVideoURL } from '../utils/validations.js'
-import { formatTime } from '../utils/tools.js'
-import { text, cancel } from '@clack/prompts'
+import { formatTime, songDurationToMiliseconds } from '../utils/tools.js'
+import { text } from '@clack/prompts'
 import { SESSIONS } from './config.js'
 import ytdl from 'ytdl-core'
+import { MAX_SONG_DURATION_MS } from '../config.js'
 
 const getSongInfo = (generalInfo, url) => {
   const { videoDetails } = generalInfo
@@ -43,11 +44,15 @@ export async function handleSingleModeByLink (oneLineCall = {}) {
     generalVideoInfo = await ytdl.getInfo(givenUrl)
   } catch (error) {
     if (error instanceof Error && error.message.includes('Video unavailable')) {
-      cancel('The link leads to an unavailable video')
-      process.exit(1)
+      cliErrorMessage('The link leads to an unavailable video')
     }
   }
 
   const song = getSongInfo(generalVideoInfo, givenUrl)
+
+  if (songDurationToMiliseconds(song.duration) > MAX_SONG_DURATION_MS) {
+    cliErrorMessage('Song duration exceeds 25 minutes')
+  }
+
   downloadAndPlay(song)
 }
