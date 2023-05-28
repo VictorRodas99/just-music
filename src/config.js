@@ -4,6 +4,17 @@ import path from 'path'
 const configPath = url.fileURLToPath(import.meta.url)
 export const srcRootPath = path.dirname(configPath)
 
+export const MAX_SONG_DURATION_MS = 1_500_000
+
+export const MODES = {
+  help: '--help',
+  normal: 'normal',
+  error: 'error',
+  byName: '-name',
+  byLink: '-link',
+  dev: '--dev'
+}
+
 export const FOLDERS = {
   audio: 'outputs',
   mediaPlayerScripts: 'scripts'
