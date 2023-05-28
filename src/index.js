@@ -6,7 +6,7 @@ import {
 } from './cli/interactions.js'
 import { handleArgumentsByCall } from './utils/handleArgs.js'
 import { logHelpMessage } from './cli/utils/logMessage.js'
-import { MODES } from './config.js'
+import { CURRENT_APP_VERSION, MODES } from './config.js'
 
 const showError = console.error
 
@@ -15,6 +15,8 @@ async function main () {
 
   if (options.mode === MODES.help) {
     return logHelpMessage()
+  } else if (options.mode === MODES.version) {
+    return console.log(CURRENT_APP_VERSION)
   }
 
   console.clear()

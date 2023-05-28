@@ -2,7 +2,7 @@ import { developMode } from './tools.js'
 import { MODES } from '../config.js'
 
 /**
- * @typedef {{ mode: ('help' | 'normal') }} PureMode
+ * @typedef {{ mode: ('--help' | 'normal' | '--vesrsion') }} PureMode
  * @typedef {{ mode: ('error' | '-name' | '-link'), payload: string }} ModePayload
  *
  * @param {Array<string>} args
@@ -21,6 +21,12 @@ export function handleArgumentsByCall (args) {
   if (givenModes.includes(MODES.help)) {
     return {
       mode: MODES.help
+    }
+  }
+
+  if (givenModes.includes(MODES.version)) {
+    return {
+      mode: MODES.version
     }
   }
 
